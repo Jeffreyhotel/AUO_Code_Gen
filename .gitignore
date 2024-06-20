@@ -1,0 +1,7 @@
+build/*
+dist/*
+/*.hex
+/*.spec
+/*.bin
+/py2exe.txt
+/__pycache__
