@@ -6,5 +6,6 @@ Step to use:
 2. Install pip.
 3. Install colorama from pip. (pip install colorama)
 4. Install intelhex from pip. (pip install intelhex)
-5. pyinstaller main.py -D -F --clean
-6. excutable file would be located at ./dist/main.exe
+5. Install pyinstaller from pip. (pip install pyinstaller)
+6. pyinstaller main.py -D -F --clean
+7. excutable file would be located at ./dist/main.exe
