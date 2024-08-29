@@ -5,3 +5,5 @@ dist/*
 /*.bin
 /py2exe.txt
 /__pycache__
+/dist_FordCD542_RX
+/dist_FordCD542_TX_OTA
