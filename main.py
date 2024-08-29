@@ -11,13 +11,14 @@ init(autoreset=True)
 print(Fore.LIGHTYELLOW_EX + "/******************************")
 print(Fore.LIGHTYELLOW_EX + "Company:   AUO")
 print(Fore.LIGHTYELLOW_EX + "Object :   Generate Bin/Hex File")
-print(Fore.LIGHTYELLOW_EX + "Author :   Jeffrey Chen (RRSEB0)")
-print(Fore.LIGHTYELLOW_EX + "Version:   V3")
-print(Fore.LIGHTYELLOW_EX + "Date   :   2024/06/17")
+print(Fore.LIGHTYELLOW_EX + "Author :   Jeffrey Chen (RRSEB4)")
+print(Fore.LIGHTYELLOW_EX + "Version:   V4")
+print(Fore.LIGHTYELLOW_EX + "Date   :   2024/08/29")
 print(Fore.LIGHTYELLOW_EX + "******************************/")
 print(Fore.LIGHTYELLOW_EX + "Project List --")
 print(Fore.LIGHTYELLOW_EX + "Project:   GEELY CX1E")
 print(Fore.LIGHTYELLOW_EX + "Project:   SGM U557")
+print(Fore.LIGHTYELLOW_EX + "Project:   FORD CD542")
 print(Fore.LIGHTYELLOW_EX + "******************************/")
 # path = "../../"
 # thisdirpath = os.getcwd()
@@ -157,6 +158,9 @@ def ZeekrOTAHeaderBuild(OutputPath):
             OTA_header_fs += int(block_length).to_bytes(4,'big')
         OTA_header_fs += b'\xFF\xFF\xFF\xFF'
         print(f'{b2hstr(OTA_header_fs)}')
+        RedundantLen = len(OTA_header_fs)
+        for i in range(int(config['HEAD-3IN1-INFO']['header_size'],10)-RedundantLen):
+            OTA_header_fs += b'\0'
         with open(OutputPath,'wb') as fp:
             fp.write(OTA_header_fs)
     except Exception:
