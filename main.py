@@ -12,7 +12,7 @@ print(Fore.LIGHTYELLOW_EX + "/******************************")
 print(Fore.LIGHTYELLOW_EX + "Company:   AUO")
 print(Fore.LIGHTYELLOW_EX + "Object :   Generate Bin/Hex File")
 print(Fore.LIGHTYELLOW_EX + "Author :   Jeffrey Chen (RRSEB4)")
-print(Fore.LIGHTYELLOW_EX + "Version:   V5-beta2")
+print(Fore.LIGHTYELLOW_EX + "Version:   V5-beta3")
 print(Fore.LIGHTYELLOW_EX + "Date   :   2024/09/04")
 print(Fore.LIGHTYELLOW_EX + "******************************/")
 print(Fore.LIGHTYELLOW_EX + "Project List --")
@@ -136,8 +136,10 @@ def ZeekrOTAHeaderBuild(HeaderInformation_Binfile,OutputPath):
         OTA_header_fs += int(config['HEAD-3IN1-INFO']['total_block'],10).to_bytes(4,'big')
 
         # Import Block mark Assignment
-        for FilePath, BlockNum, BlockVer in HeaderInformation_Binfile:
-            OTA_header_fs += BlockVer.to_bytes(10,'big')
+        for FilePath, BlockNum, BlockVer, BlockCRC32, BlockResv in HeaderInformation_Binfile:
+            OTA_header_fs += BlockResv.to_bytes(4,'big')
+            OTA_header_fs += BlockCRC32.to_bytes(4,'big')
+            OTA_header_fs += BlockVer.to_bytes(2,'big')
             OTA_header_fs += BlockNum.to_bytes(2,'big')
 
         # for i in range(int(config['HEAD-3IN1-INFO']['total_block'],10)):
@@ -148,7 +150,7 @@ def ZeekrOTAHeaderBuild(HeaderInformation_Binfile,OutputPath):
         block_length = 0
         start_addr += int(config['HEAD-3IN1-INFO']['header_size'],10)
 
-        for FilePath, BlockNum, BlockVer in HeaderInformation_Binfile:
+        for FilePath, BlockNum, BlockVer, BlockCRC32, BlockResv in HeaderInformation_Binfile:
             if os.path.exists(FilePath):
                 with open(FilePath,'rb') as fp:
                     fs = fp.read()
@@ -250,7 +252,9 @@ def main():
             print(f'{section} is a part of OTA file with header = yes ')
             OtaHeaderFilePath.append((config[section]['filepath'],
                                      int(config[section]['headerblock_number'],16),
-                                     int(config[section]['headerblock_version'],16)
+                                     int(config[section]['headerblock_version'],16),
+                                     int(config[section]['headerblock_crc32'],16),
+                                     int(config[section]['headerblock_reserve'],16)
                                      ))
     print(Fore.GREEN + f'OtaFilePath = {OtaHeaderFilePath}')
     if len(OtaHeaderFilePath) == 0:
