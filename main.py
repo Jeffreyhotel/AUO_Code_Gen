@@ -12,8 +12,8 @@ print(Fore.LIGHTYELLOW_EX + "/******************************")
 print(Fore.LIGHTYELLOW_EX + "Company:   AUO")
 print(Fore.LIGHTYELLOW_EX + "Object :   Generate Bin/Hex File")
 print(Fore.LIGHTYELLOW_EX + "Author :   Jeffrey Chen (RRSEB4)")
-print(Fore.LIGHTYELLOW_EX + "Version:   V4")
-print(Fore.LIGHTYELLOW_EX + "Date   :   2024/08/29")
+print(Fore.LIGHTYELLOW_EX + "Version:   V5")
+print(Fore.LIGHTYELLOW_EX + "Date   :   2024/09/04")
 print(Fore.LIGHTYELLOW_EX + "******************************/")
 print(Fore.LIGHTYELLOW_EX + "Project List --")
 print(Fore.LIGHTYELLOW_EX + "Project:   GEELY CX1E")
@@ -115,7 +115,7 @@ def CombineOriginFiles(paths: list[str],OutputPath):
     else:
         print("#---#Output OTA Combined file Fail!@#$%^&*()")
 
-def ZeekrOTAHeaderBuild(OutputPath):
+def ZeekrOTAHeaderBuild(HeaderInformation_Binfile,OutputPath):
     # Initial and load Config File
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -134,28 +134,25 @@ def ZeekrOTAHeaderBuild(OutputPath):
             OTA_header_fs += b'\0'
         OTA_header_fs += int(config['CONFIG']['mcu_version_hex'],16).to_bytes(2,'big')
         OTA_header_fs += int(config['HEAD-3IN1-INFO']['total_block'],10).to_bytes(4,'big')
+
+        # Import Block mark Assignment
         for i in range(int(config['HEAD-3IN1-INFO']['total_block'],10)):
             OTA_header_fs += int(i+1).to_bytes(12,'big')
+            
+        # Import Block Start Addr & Length
         start_addr = 0
         block_length = 0
         start_addr += int(config['HEAD-3IN1-INFO']['header_size'],10)
-        OTA_header_fs += int(start_addr).to_bytes(4,'big')
-        with open(config['MCU-AB-CRC']['filepath'],'rb') as fp:
-            fs = fp.read()
-            block_length = len(fs)
-            OTA_header_fs += int(block_length).to_bytes(4,'big')
-        start_addr += block_length
-        OTA_header_fs += int(start_addr).to_bytes(4,'big')
-        with open(config['TCON']['filepath'],'rb') as fp:
-            fs = fp.read()
-            block_length = len(fs)
-            OTA_header_fs += int(block_length).to_bytes(4,'big')
-        start_addr += block_length
-        OTA_header_fs += int(start_addr).to_bytes(4,'big')
-        with open(config['TDDI']['filepath'],'rb') as fp:
-            fs = fp.read()
-            block_length = len(fs)
-            OTA_header_fs += int(block_length).to_bytes(4,'big')
+
+        for FilePath in HeaderInformation_Binfile:
+            if os.path.exists(FilePath):
+                with open(FilePath,'rb') as fp:
+                    fs = fp.read()
+                    block_length = len(fs)
+                    OTA_header_fs += int(start_addr).to_bytes(4,'big')
+                    OTA_header_fs += int(block_length).to_bytes(4,'big')
+                    start_addr += block_length
+
         OTA_header_fs += b'\xFF\xFF\xFF\xFF'
         print(f'{b2hstr(OTA_header_fs)}')
         RedundantLen = len(OTA_header_fs)
@@ -242,8 +239,17 @@ def main():
         CombineOriginFiles(OtaFilePath,config['CONFIG']['output_ota_bin_without_header_fp'])
 
     # Build Zeekr OTA header
-    print(Fore.LIGHTCYAN_EX + "Build Zeekr OTA header")
-    ZeekrOTAHeaderBuild(config['CONFIG']['output_ota_bin_header_fp'])
+    print(Fore.LIGHTCYAN_EX + "Build OTA header")
+    OtaHeaderFilePath = []
+    for section in config.sections():
+        if "yes" == config[section]['isOTAHeaderFile']:
+            print(f'{section} is a part of OTA file with header = yes ')
+            OtaHeaderFilePath.append(config[section]['filepath'])
+    print(Fore.GREEN + f'OtaFilePath = {OtaHeaderFilePath}')
+    if len(OtaHeaderFilePath) == 0:
+        print('OTA Header file is empty')
+    else:
+        ZeekrOTAHeaderBuild(OtaHeaderFilePath,config['CONFIG']['output_ota_bin_header_fp'])
 
     # Build OTA Combined File with Zeekr OTA header
     print(Fore.LIGHTCYAN_EX + "Build OTA Combined File with Zeekr OTA header")
